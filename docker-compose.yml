@@ -1,28 +1,10 @@
-on: "3.8"
+version: "3.8"
 
 services:
-  db:
-    image: mysql:8.0
-    environment:
-      MYSQL_ROOT_PASSWORD: root
-      MYSQL_DATABASE: test_db
-    networks:
-      - notes-app-nw
-
-  django_app:
-    build: .
-    ports:
-      - "8000:8000"
-    command: sh -c "python manage.py migrate --noinput && gunicorn notesapp.wsgi:application --bind 0.0.0.0:8000"
-    env_file:
-      - .env
-    depends_on:
-      - db
-    networks:
-      - notes-app-nw
-
   nginx:
     build: ./nginx
+    image: nginx
+    container_name: nginx_cont
     ports:
       - "80:80"
     depends_on:
@@ -30,8 +12,42 @@ services:
     networks:
       - notes-app-nw
 
+  django_app:
+    build: .
+    image: django_app
+    container_name: django_cont
+    ports:
+      - "8000:8000"
+    command: >
+      sh -c "python manage.py migrate --noinput &&
+             gunicorn notesapp.wsgi:application --bind 0.0.0.0:8000"
+    env_file:
+      - .env
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      - notes-app-nw
+
+  db:
+    image: mysql:8.0
+    container_name: db_cont
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: test_db
+    volumes:
+      - ./data/mysql/db:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - notes-app-nw
+
 networks:
   notes-app-nw:
+
 
 
 

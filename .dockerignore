@@ -1,11 +1,14 @@
-# Ignore database
+# Ignore database folder
+data/mysql/db
+
+# Ignore SQLite database
 db.sqlite3
 
-# Ignore Python cache
+# Python cache files
 __pycache__/
 *.pyc
 
-# Ignore environment files (if any)
+# Environment files
 .env
 
 
